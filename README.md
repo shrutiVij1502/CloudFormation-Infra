@@ -8,11 +8,15 @@
 
 ### Step3 : Attach the Internet gateway to the VPC
 
+<img width="695" alt="image" src="https://user-images.githubusercontent.com/67600604/203746399-b8fd9112-f20f-4437-9584-4e33184359c2.png">
+
 ### Step4 : Subnet Creation In Vpc including the AZName, VPCName and CIDR IP.
 
 ### Step5 : Created the Route Table 
 
 ### Step6 : Create the ROute for the RT to the IGW
+
+<img width="774" alt="image" src="https://user-images.githubusercontent.com/67600604/203746607-ec6f0d08-f89b-4ac7-a299-ee6d39a1c396.png">
 
 ```
 0.0.0.0/0 -> IGW
@@ -25,10 +29,16 @@ primary is for the NAT Attachment - No IGW
 
 ### Step8 : Create the EC2 Instance.
 
-### Step9 : Create the Elastic-IP.
+### Step9: Create the Security-Group with the port 80 and port 22 inbound rule.
 
-### Step10: Create the Security-Group with the port 80 and port 22 inbound rule.
+<img width="682" alt="image" src="https://user-images.githubusercontent.com/67600604/203746908-e3e994cb-fa70-4343-9afd-5284f6ff1ea8.png">
 
-### Step11: Association of E-IP, Security Group and Key-pair to the Instance using !Ref 
+### Step10 : Create the Elastic-IP and Association of E-IP, Security Group and Key-pair to the Instance using !Ref 
+
+<img width="809" alt="image" src="https://user-images.githubusercontent.com/67600604/203746799-38780b22-d332-4fcb-95fb-91e419efe7ac.png">
+
+
+
+
 
 
