@@ -1,8 +1,6 @@
 # Creation of the Infrastructure setup on AWS using the Cloudformation 
 
-## the Infra contains the custom VPC and a subnet , In which I have launched the EC2 intance 
-## Custom Security group having the inbound rule of 22 and 80 ports 
-## custom Route Table, with the attachment of Internet Gateway
+- Code is in the Repository, and the description of the code is given below
 
 ### Step1 : Created the VPC having the name and cidr as these are the conditional arguments.
 
