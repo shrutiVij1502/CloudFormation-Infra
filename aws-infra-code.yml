@@ -1,0 +1,120 @@
+Parameters:
+  AMI:
+    Type: String
+    Description: Shruti Image
+    Default: ami-0ceb9d4c9f22c7b50
+  InstanceType:
+    Type: String
+    Description: Instance-type-shruti
+    Default: t2.micro
+  KeyName:
+    Type: String
+    Description: SSH-KEY
+    Default: shruti-keypair
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: '10.0.0.0/24'
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags: 
+        - Key: Name
+          Value: Shruti-cf-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties: 
+      Tags: 
+        - Key: Name
+          Value: Shruti-IGW
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref  VPC
+      CidrBlock: 10.0.0.0/27
+      #AvailabilityZone: "us-east-1a" 
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      Tags:
+        - Key: Name
+          Value: shrutisubnetlab1-CF
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: Shruti-cf-RT
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+       RouteTableId:
+         Ref: RouteTable
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetA
+      RouteTableId: !Ref RouteTable
+
+  EC2Instance: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AMI
+      SubnetId: !Ref SubnetA
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds: 
+      - Ref: InstanceSecurityGroup
+      AvailabilityZone: ap-south-1a
+      KeyName: !Ref KeyName
+      Tags:
+      - Key: Name
+        Value: Shruti-Instance-CF-test
+      
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref EC2Instance
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: Name
+        Value: Shruti-sg-group-cf
+        
+        
+- Note : 'MapPublicIpOnLaunch: true' function (in subnet resource)is to assign the public IP to the instance automatically whichever launch in this public subnet
+         in case of we don't want to assign the EIP to the Instance
+ 
