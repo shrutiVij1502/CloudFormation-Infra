@@ -63,7 +63,7 @@ Resources:
     Properties: 
       CacheNodeType: cache.t2.micro
       CacheSubnetGroupName: !Ref SubnetGroup
-      ClusterName: Bpcache
+      ClusterName: Shruti-Cluster
       Engine: redis
       NumCacheNodes: 1
       Tags: 
