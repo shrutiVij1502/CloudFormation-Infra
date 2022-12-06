@@ -1,0 +1,66 @@
+Parameters:
+  vpc:
+    Type: String
+    Description: VPC id
+    Default: vpc-01a736f07f0b06c30
+  #SubnetA:
+    #Type: List
+    #Description: Subnet in which to launch an EC2
+    #Default: subnet-03996c9b32499e721
+
+
+Resources:
+
+  SecurityGroup:
+   Type: 'AWS::EC2::SecurityGroup'
+   Properties:
+    VpcId: !Ref vpc
+    GroupDescription: Elasticache Security Group
+  InboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 6379
+      ToPort: 6379
+      GroupId: !GetAtt SecurityGroup.GroupId
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - SecurityGroup
+          - GroupId
+
+  SubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Cache Subnet Group
+      SubnetIds: 
+      - subnet-03996c9b32499e721
+      - subnet-0b97cba010b446cee
+
+  ElastiCacheCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties: 
+      CacheNodeType: cache.t2.micro
+      CacheSubnetGroupName: !Ref SubnetGroup
+      ClusterName: Bpcache2
+      Engine: redis
+      NumCacheNodes: 1
+      Tags: 
+       - Key: Name
+         Value: StackName1
+      VpcSecurityGroupIds: 
+       - !GetAtt SecurityGroup.GroupId
+
+
+Outputs:
+
+  ElastiCacheAddress:
+    Description: ElastiCache endpoint address
+    Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
+    Export:
+      Name: ElastiCacheAddress
+
+  ElastiCachePort:
+    Description: ElastiCache port
+    Value: 6379
+    Export:
+      Name: ElastiCachePort
