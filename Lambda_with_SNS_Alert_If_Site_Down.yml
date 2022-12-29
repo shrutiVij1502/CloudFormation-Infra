@@ -1,0 +1,150 @@
+# Lambda_with_SNS_Alert_If_Site_Down
+# Lambda setup that will send the alert to the mail via SNS Topic, if the Website is down
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create a Lambda function with CloudFormation
+
+# To Take Input as JSON String which will have the SNS topic arn and URL that we have to check.
+# e.g, format - {"url": ["https://aws.amazon.com/healthy/"],"TopicArn": "sns-topic-arn"}
+
+Parameters:
+  EventJSON:
+    Type: String
+    Description: A JSON string to pass as the event to the Lambda function
+
+Resources:
+## Creating lambda function with the Code.
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import requests
+
+          def lambda_handler(event, context):
+              websiteURL = event['url']
+              topic_arn = event['TopicArn']
+              for x in websiteURL:
+                  print (x)
+                  r = requests.get(x,verify=False)
+                  print (r)
+                  if r.status_code == 200:
+                      print('Website is alive!!')
+                  else:
+                      sns_client = boto3.client('sns')
+                      sns_client.publish(
+                      TopicArn = topic_arn,
+                      Subject = 'Website is not reachable ' + x,
+                      Message = 'Website: ' + x + ' is down\n')
+                      print('Website is dead')
+      Handler: index.lambda_handler
+      FunctionName: My_cf_lambda
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.7
+      Timeout: 300
+
+
+## ExecutionRole for the Lambda with the Attached Policies.
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRole-cf
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: lambda-policy-cf
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            Resource: "arn:aws:logs:ap-south-1:'Acc.No':*"
+          - Effect: Allow 
+            Action: 
+            - sns:Publish
+            Resource: "*"
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: "arn:aws:logs:ap-south-1:'Acc.no':log-group:/aws/lambda/My_cf_lambda:*"
+
+## Creating the Cloudwatch Event Rule and Target with lambda to invoke it after every 5 Minutes.
+
+  ScheduledRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Name: MyLambdaScheduleRule-cf
+      ScheduleExpression: cron(0/5 * * * ? *)
+      Description: "ScheduledRule"
+      #ScheduleExpression: "rate(5 minutes)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt LambdaFunction.Arn
+          Id: MyLambdaFunction
+          Input: !Sub '${EventJSON}'
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref LambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "ScheduledRule"
+          - "Arn"
+
+
+# Note - Two policy should be assigned to the Role and that role is assigned to the Lambda Function. 
+
+# 1-SNS Policy
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "sns:Publish",
+            "Resource": "SNS-Topic-ARN"
+        }
+    ]
+}
+
+# This policy will auto create when we create the Lambda Function
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "logs:CreateLogGroup",
+            "Resource": "arn:aws:logs:ap-south-1:"acc.no.":*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:ap-south-1:"acc.no":log-group:/aws/lambda/"name-of-lambda-func":*"
+            ]
+        }
+    ]
+}
+
+
+
