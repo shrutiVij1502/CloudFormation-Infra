@@ -108,6 +108,7 @@ Resources:
 
 
 # Note - Two policy should be assigned to the Role and that role is assigned to the Lambda Function. 
+# This part is different from the Cloudformation Code 
 
 # 1-SNS Policy
 
