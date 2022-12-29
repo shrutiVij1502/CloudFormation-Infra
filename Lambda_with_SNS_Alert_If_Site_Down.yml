@@ -95,6 +95,7 @@ Resources:
         - Arn: !GetAtt LambdaFunction.Arn
           Id: MyLambdaFunction
           Input: !Sub '${EventJSON}'
+          #Input: "{ \"url\": \"https://qa.zegacompass.com/health\", \"TopicArn\": \"arn:aws:sns:ap-south-1:655645242246:testfunc\" }"
   PermissionForEventsToInvokeLambda: 
     Type: AWS::Lambda::Permission
     Properties: 
